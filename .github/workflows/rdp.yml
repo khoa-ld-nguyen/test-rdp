@@ -1,0 +1,72 @@
+name: Free RDP Windows (VN Dev AutoReconnect)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Download Ngrok
+        run: |
+          Invoke-WebRequest https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-stable-windows-amd64.zip -OutFile ngrok.zip
+          Expand-Archive ngrok.zip
+          del ngrok.zip
+
+      - name: Start Ngrok with Auto Reconnect (Asia Region)
+        run: |
+          .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
+          Write-Output "🚀 Launching Ngrok with auto-reconnect..."
+          powershell -Command "
+            while ($true) {
+              try {
+                Start-Process -NoNewWindow -FilePath .\ngrok\ngrok.exe -ArgumentList 'tcp --region ap 3389'
+                Start-Sleep -Seconds 30
+                if (-not (Get-Process ngrok -ErrorAction SilentlyContinue)) {
+                  Write-Output '⚠️ Ngrok stopped, restarting in 5s...'
+                  Start-Sleep -Seconds 5
+                }
+              } catch {
+                Write-Output '❌ Error running Ngrok, retrying...'
+                Start-Sleep -Seconds 5
+              }
+            }
+          " -WindowStyle Hidden
+
+      - name: Enable RDP Access
+        run: |
+          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+          net user knguyen P@ssw0rd123 /add
+          net localgroup administrators knguyen /add
+
+      - name: Install Developer Tools + Chrome + VS Code
+        run: |
+          choco install -y git
+          choco install -y nodejs
+          choco install -y python
+          choco install -y googlechrome
+          choco install -y vscode
+
+      - name: Print Ngrok URL Continuously
+        run: |
+          Write-Output "📡 Waiting for Ngrok tunnel..."
+          while ($true) {
+            try {
+              $tunnels = Invoke-RestMethod -Uri http://127.0.0.1:4040/api/tunnels -TimeoutSec 5
+              if ($tunnels.tunnels.Count -gt 0) {
+                $addr = $tunnels.tunnels[0].public_url -replace "tcp://",""
+                Write-Output '====================================='
+                Write-Output "🌐 Active RDP Tunnel: $addr"
+                Write-Output "👤 User: knguyen"
+                Write-Output "🔑 Password: P@ssw0rd123"
+                Write-Output '====================================='
+              } else {
+                Write-Output "⏳ No tunnel yet, retrying..."
+              }
+            } catch {
+              Write-Output "⚠️ Cannot fetch Ngrok tunnel, retrying..."
+            }
+            Start-Sleep -Seconds 20
+          }
