@@ -18,20 +18,7 @@ jobs:
         shell: pwsh
         run: |
           .\ngrok\ngrok.exe authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
-          Write-Output "🚀 Launching Ngrok with auto-reconnect..."
-          while ($true) {
-            try {
-              Start-Process -NoNewWindow -FilePath .\ngrok\ngrok.exe -ArgumentList "tcp --region ap 3389"
-              Start-Sleep -Seconds 30
-              if (-not (Get-Process ngrok -ErrorAction SilentlyContinue)) {
-                Write-Output "⚠️ Ngrok stopped, restarting in 5s..."
-                Start-Sleep -Seconds 5
-              }
-            } catch {
-              Write-Output "❌ Error running Ngrok, retrying..."
-              Start-Sleep -Seconds 5
-            }
-          }
+          Start-Process -NoNewWindow -FilePath .\ngrok\ngrok.exe -ArgumentList "tcp 3389"
 
       - name: Enable RDP Access
         run: |
