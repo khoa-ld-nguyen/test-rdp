@@ -21,7 +21,7 @@ jobs:
           powershell -Command "
             while ($true) {
               try {
-                Start-Process -NoNewWindow -FilePath .\ngrok\ngrok.exe -ArgumentList 'tcp --region ap 3389'
+                Start-Process -NoNewWindow -WindowStyle Hidden -FilePath .\ngrok\ngrok.exe -ArgumentList 'tcp --region ap 3389'
                 Start-Sleep -Seconds 30
                 if (-not (Get-Process ngrok -ErrorAction SilentlyContinue)) {
                   Write-Output '⚠️ Ngrok stopped, restarting in 5s...'
@@ -32,7 +32,8 @@ jobs:
                 Start-Sleep -Seconds 5
               }
             }
-          " -WindowStyle Hidden
+          "
+
 
       - name: Enable RDP Access
         run: |
