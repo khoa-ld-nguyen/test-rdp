@@ -15,25 +15,23 @@ jobs:
           del ngrok.zip
 
       - name: Start Ngrok with Auto Reconnect (Asia Region)
+        shell: pwsh
         run: |
           .\ngrok\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
           Write-Output "🚀 Launching Ngrok with auto-reconnect..."
-          powershell -Command "
-            while ($true) {
-              try {
-                Start-Process -NoNewWindow -WindowStyle Hidden -FilePath .\ngrok\ngrok.exe -ArgumentList 'tcp --region ap 3389'
-                Start-Sleep -Seconds 30
-                if (-not (Get-Process ngrok -ErrorAction SilentlyContinue)) {
-                  Write-Output '⚠️ Ngrok stopped, restarting in 5s...'
-                  Start-Sleep -Seconds 5
-                }
-              } catch {
-                Write-Output '❌ Error running Ngrok, retrying...'
+          while ($true) {
+            try {
+              Start-Process -NoNewWindow -WindowStyle Hidden -FilePath .\ngrok\ngrok.exe -ArgumentList "tcp --region ap 3389"
+              Start-Sleep -Seconds 30
+              if (-not (Get-Process ngrok -ErrorAction SilentlyContinue)) {
+                Write-Output "⚠️ Ngrok stopped, restarting in 5s..."
                 Start-Sleep -Seconds 5
               }
+            } catch {
+              Write-Output "❌ Error running Ngrok, retrying..."
+              Start-Sleep -Seconds 5
             }
-          "
-
+          }
 
       - name: Enable RDP Access
         run: |
