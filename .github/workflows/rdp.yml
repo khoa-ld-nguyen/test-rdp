@@ -21,7 +21,7 @@ jobs:
           Write-Output "🚀 Launching Ngrok with auto-reconnect..."
           while ($true) {
             try {
-              Start-Process -NoNewWindow -WindowStyle Hidden -FilePath .\ngrok\ngrok.exe -ArgumentList "tcp --region ap 3389"
+              Start-Process -NoNewWindow -FilePath .\ngrok\ngrok.exe -ArgumentList "tcp --region ap 3389"
               Start-Sleep -Seconds 30
               if (-not (Get-Process ngrok -ErrorAction SilentlyContinue)) {
                 Write-Output "⚠️ Ngrok stopped, restarting in 5s..."
